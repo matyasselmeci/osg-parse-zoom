@@ -5,6 +5,10 @@ import argparse
 import datetime
 import numpy as np
 
+from difflib import SequenceMatcher
+
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
 
 def main():
     parser = argparse.ArgumentParser(description='Process some attendance records')
@@ -56,8 +60,27 @@ def main():
     print("Unique Attendees:", df['Name (Original Name)'].nunique())
 
     unique_df = pd.DataFrame(data=df['Name (Original Name)'].unique())
-    unique_df.to_csv("unique.csv")
     
+    # Remove duplicate names
+    # Do an all to all, comparing unique name similarity
+    # A similarity score of 0.7 was pick arbitrarily.
+    # Only compare names before the first "("
+    is_duplicate = []
+    for i in range(len(unique_df.index)):
+        detected_duplicate = False
+        for a in range(i+1, len(unique_df.index)):
+            # Compare the names
+            namea = unique_df.iloc[i,0]
+            nameb = unique_df.iloc[a,0]
+            if similar(namea.split("(")[0], nameb.split("(")[0]) > 0.7:
+                print("Names {} and {} are similar".format(namea, nameb))
+                detected_duplicate = True
+        is_duplicate.append(not detected_duplicate)
+
+    print(is_duplicate)
+    unique_df.loc[is_duplicate].to_csv("unique.csv")
+    #unique_df.to_csv("unique.csv")
+
 
     # Convert the start times to date times, so it can be useful
     df['start_dt'] = pd.to_datetime(df['Join Time'])
