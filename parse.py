@@ -23,10 +23,19 @@ def main():
     # For each argument, read in the CSV
     for report in args.reports:
         # Split the input by the equal sign
-        session, csv_file = report.split("=")
+        if len(report.split("=")) > 1:
+            session, csv_file = report.split("=")
+        else:
+            csv_file = report
+            session = report
+        if len(csv_file.split(";")) > 1:
+            csv_file, time_adjust = csv_file.split(";")
+        else:
+            time_adjust = 0
         sessions.append(session)
         df = pd.read_csv(csv_file)
         df = df.assign(Session=lambda x: session)
+        df = df.assign(TimeAdjust=lambda x: int(time_adjust))
         dfs.append(df)
 
     df = pd.concat(dfs)
@@ -70,8 +79,8 @@ def main():
         detected_duplicate = False
         for a in range(i+1, len(unique_df.index)):
             # Compare the names
-            namea = unique_df.iloc[i,0]
-            nameb = unique_df.iloc[a,0]
+            namea = str(unique_df.iloc[i,0])
+            nameb = str(unique_df.iloc[a,0])
             if similar(namea.split("(")[0], nameb.split("(")[0]) > 0.7:
                 print("Names {} and {} are similar".format(namea, nameb))
                 detected_duplicate = True
@@ -81,11 +90,19 @@ def main():
     unique_df.loc[is_duplicate].to_csv("unique.csv")
     #unique_df.to_csv("unique.csv")
 
+    def adjustTime(row, column):
+        return row[column] + datetime.timedelta(hours=row["TimeAdjust"])
+
+    def adjustEnd(row):
+        print(row["end_dt"])
+        return row["end_dt"] + datetime.timedelta(hours=row["TimeAdjust"])
 
     # Convert the start times to date times, so it can be useful
     df['start_dt'] = pd.to_datetime(df['Join Time'])
     df['end_dt'] = pd.to_datetime(df['Leave Time'])
-    print(df[df.start_dt.isnull()])
+    #print(df[df.start_dt.isnull()])
+    df['start_dt'] = df.apply(lambda row: adjustTime(row, 'start_dt'), axis=1)
+    df['end_dt'] = df.apply(lambda row: adjustTime(row, 'end_dt'), axis=1)
 
     # For each session, get only the join and leave time of the attendees, and every second inbetween
     # This is the first step of generating an attendee graph

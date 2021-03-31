@@ -9,6 +9,12 @@ the processing is:
 
     $ python parse.py "Day 1=participants_day1.csv" "Day 2=participants_day2.csv" "Day 3=participants_day3.csv" "Day  4=participants_day4.csv" "Day 5=participants_day5.csv"
 
+You can adjust the timezone in each of the CSV files by adding a ";<hours>" at the end of the csv file name.  For example:
+
+    $ python parse.py "Day 1=participants_day1.csv;2" "Day 2=participants_day2.csv"
+
+Would adjust all the times in participants_day1.csv by adding 2 hours.
+
 When exporting from Zoom, do **NOT** check the "Export with meeting data".
 
 Data
