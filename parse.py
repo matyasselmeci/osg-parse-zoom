@@ -44,7 +44,7 @@ def main():
     # Name (Original Name),User Email,Join Time,Leave Time,Duration (Minutes)
     
     # Get list of all users in days 1-4
-    def unqiue_to_session(session):
+    def unique_to_session(session):
         combined = []
         for data_session in sessions:
             if data_session == session:
@@ -55,7 +55,7 @@ def main():
    
     # Print out all of the unique attendees
     for session in sessions:
-        print("{} unique: {}".format(session, unqiue_to_session(session)))
+        print("{} unique: {}".format(session, unique_to_session(session)))
 
     # Print out just the LHC users, not so useful generally
     #non_lhc = list(df[df['Session'] == "Day 1"]['Name (Original Name)'].unique())
