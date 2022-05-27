@@ -94,10 +94,6 @@ def main():
     def adjustTime(row, column):
         return row[column] + datetime.timedelta(hours=row["TimeAdjust"])
 
-    def adjustEnd(row):
-        print(row["end_dt"])
-        return row["end_dt"] + datetime.timedelta(hours=row["TimeAdjust"])
-
     # Convert the start times to date times, so it can be useful
     df['start_dt'] = pd.to_datetime(df['Join Time'])
     df['end_dt'] = pd.to_datetime(df['Leave Time'])
