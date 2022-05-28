@@ -1,3 +1,4 @@
+from collections import defaultdict
 import pandas as pd
 from matplotlib import pyplot
 import matplotlib.dates as mdates
@@ -17,10 +18,43 @@ def main():
     parser.add_argument('reports', type=str, nargs='+',
                     help='Reports in the form <name>=<file.csv>')
     parser.add_argument('--title', help="Graph Title")
+    parser.add_argument('--corrections', type=argparse.FileType('r'), help="File containing name corrections")
 
     args = parser.parse_args()
     dfs = []
     sessions = []
+    replacements = {}
+    unaliases = defaultdict(set)
+
+    # Parse the corrections file
+    # File format:
+    #
+    # OLD => NEW
+    # does string replacement on names
+    #
+    # A != B
+    # lists similar names that are different people
+
+    if args.corrections:
+        for line in args.corrections:
+            if "=>" in line:
+                original, _, replacement = line.strip().partition("=>")
+                if not replacement:
+                    continue
+                original = original.rstrip()
+                replacement = replacement.lstrip()
+                replacements[original] = replacement
+            elif "!=" in line:
+                original, _, unalias = line.strip().partition("!=")
+                if not unalias:
+                    continue
+                original = original.rstrip()
+                unalias = unalias.lstrip()
+                unaliases[original].add(unalias)
+                unaliases[unalias].add(original)
+            else:
+                continue
+
 
     # For each argument, read in the CSV
     for report in args.reports:
@@ -40,6 +74,7 @@ def main():
         df = df.assign(TimeAdjust=lambda x: int(time_adjust))
         df["Name"] = df["Name (Original Name)"].str.partition(" (").get(0)
         del df["Name (Original Name)"]
+        df["Name"].replace(replacements, inplace=True)
         dfs.append(df)
 
     df = pd.concat(dfs)
@@ -85,9 +120,12 @@ def main():
             # Compare the names
             namea = str(unique_df.iloc[i,0])
             nameb = str(unique_df.iloc[a,0])
-            if similar(namea.split("(")[0], nameb.split("(")[0]) > 0.7:
-                print("Names {} and {} are similar".format(namea, nameb))
-                detected_duplicate = True
+            if similar(namea, nameb) > 0.7:
+                if nameb in unaliases.get(namea, set()) or namea in unaliases.get(nameb, set()):
+                    print("Names {} and {} are similar but listed as distinct".format(namea, nameb))
+                else:
+                    print("Names {} and {} are similar".format(namea, nameb))
+                    detected_duplicate = True
         is_duplicate.append(not detected_duplicate)
 
     print(is_duplicate)
