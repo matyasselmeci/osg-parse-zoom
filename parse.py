@@ -38,6 +38,8 @@ def main():
         df = pd.read_csv(csv_file)
         df = df.assign(Session=lambda x: session)
         df = df.assign(TimeAdjust=lambda x: int(time_adjust))
+        df["Name"] = df["Name (Original Name)"].str.partition(" (").get(0)
+        del df["Name (Original Name)"]
         dfs.append(df)
 
     df = pd.concat(dfs)
@@ -50,8 +52,8 @@ def main():
         for data_session in sessions:
             if data_session == session:
                 continue
-            combined += list(df[df['Session'] == data_session]['Name (Original Name)'].unique())
-        session_users = list(df[df['Session'] == session]['Name (Original Name)'].unique())
+            combined += list(df[df['Session'] == data_session]['Name'].unique())
+        session_users = list(df[df['Session'] == session]['Name'].unique())
         return len(set(session_users) - set(combined))
    
     # Print out all of the unique attendees
@@ -68,9 +70,9 @@ def main():
     #print(len(unique_lhc_users))
 
     # List of unique attendees
-    print("Unique Attendees:", df['Name (Original Name)'].nunique())
+    print("Unique Attendees:", df['Name'].nunique())
 
-    unique_df = pd.DataFrame(data=df['Name (Original Name)'].unique())
+    unique_df = pd.DataFrame(data=df['Name'].unique())
     
     # Remove duplicate names
     # Do an all to all, comparing unique name similarity
