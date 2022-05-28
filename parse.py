@@ -1,6 +1,7 @@
 import pandas as pd
 from matplotlib import pyplot
 import matplotlib.dates as mdates
+import matplotlib.ticker as mticker
 import sys
 import argparse
 import datetime
@@ -118,6 +119,7 @@ def main():
     #series.plot()
     plot = df1.plot(x_compat=True)
     plot.xaxis.set_minor_locator(mdates.HourLocator())
+    plot.yaxis.set_minor_locator(mticker.MultipleLocator(1))
     fig = plot.get_figure()
     fig.set_size_inches(10, 7)
     fig.suptitle(args.title)
